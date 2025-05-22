@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>거래내역 수기 등록</title>
+</head>
+<body>
+  <h1>📋 거래내역 수기 등록</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">등록</button>
+  </form>
+
+  <hr>
+
+  <h2>📑 등록된 거래내역</h2>
+  <table border="1" cellpadding="8">
+    <thead>
+      <tr>
+        <th>구분</th>
+        <th>제목</th>
+        <th>금액</th>
+        <th>날짜</th>
+        <th>비고</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.get_type_display }}</td>
+        <td>{{ t.title }}</td>
+        <td>{{ t.amount|intcomma }}원</td>
+        <td>{{ t.date }}</td>
+        <td>{{ t.note }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5">등록된 거래내역이 없습니다.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

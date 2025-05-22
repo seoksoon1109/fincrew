@@ -1,0 +1,29 @@
+from django.contrib import admin
+from .models import Transaction, Receipt, Member
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'title', 'amount', 'date', 'has_receipt', 'note')
+    list_filter = ('type', 'has_receipt', 'date')
+    search_fields = ('title', 'note')
+    ordering = ('-date',)
+
+
+@admin.register(Receipt)
+class ReceiptAdmin(admin.ModelAdmin):
+    list_display = ('id', 'transaction', 'image', 'upload_date', 'ocr_store_name')
+    list_filter = ('upload_date',)
+    search_fields = ('transaction__title', 'ocr_store_name', 'ocr_result_text')
+    ordering = ('-upload_date',)
+
+
+@admin.register(Member)
+class MemberAdmin(admin.ModelAdmin):
+    list_display = (
+        'name', 'college', 'department', 'student_id',
+        'grade', 'phone_number', 'member_type', 'has_paid', 'joined_at'
+    )
+    list_filter = ('college', 'department', 'grade', 'member_type', 'has_paid', 'joined_at')
+    search_fields = ('name', 'student_id', 'phone_number')
+    ordering = ('-joined_at',)

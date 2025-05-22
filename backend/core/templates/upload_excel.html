@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>엑셀 업로드</title>
+</head>
+<body>
+  <h1>📤 거래내역 엑셀 업로드</h1>
+
+  {% if message %}
+    <p><strong>{{ message }}</strong></p>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">업로드</button>
+  </form>
+
+  <hr>
+  <p>💡 영수증이 자동 연동되지 않으면, 나중에 수동으로 연결할 수 있습니다.</p>
+  <p>📌 현재는 <strong>카카오뱅크</strong> 양식만 지원됩니다.</p>
+</body>
+</html>
