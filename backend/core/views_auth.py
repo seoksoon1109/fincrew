@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .serializers import UserSerializer 
 
 
 @api_view(['POST'])
@@ -37,14 +38,8 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-# ✅ 사용자 정보 조회 (로그인 상태에서만 접근 가능)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_info(request):
-    user = request.user
-    return Response({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'is_staff': user.is_staff,
-    })
+    serializer = UserSerializer(request.user)
+    return Response(serializer.data)

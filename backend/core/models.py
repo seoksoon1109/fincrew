@@ -20,10 +20,6 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.get_type_display()} - {self.title} ({self.amount}원)"
 
-
-from django.db import models
-import os
-
 class Receipt(models.Model):
     transaction = models.ForeignKey(
         'Transaction',
@@ -86,3 +82,22 @@ class Member(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.student_id})'
+
+class Notice(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    attachment = models.FileField(upload_to='notices/', blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+    
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_auditor = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.user.username} - 감사 여부: {self.is_auditor}'

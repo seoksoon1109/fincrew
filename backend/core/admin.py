@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Transaction, Receipt, Member
+from .models import Transaction, Receipt, Member, Profile
 
 
 @admin.register(Transaction)
@@ -27,3 +27,10 @@ class MemberAdmin(admin.ModelAdmin):
     list_filter = ('college', 'department', 'grade', 'member_type', 'has_paid', 'joined_at')
     search_fields = ('name', 'student_id', 'phone_number')
     ordering = ('-joined_at',)
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_auditor')
+    list_filter = ('is_auditor',)
+    search_fields = ('user__username', 'user__email')

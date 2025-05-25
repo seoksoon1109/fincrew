@@ -1,4 +1,14 @@
 from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from .serializers import TransactionSerializer
+from .serializers import ReceiptSerializer
+from .permissions import IsOwnerOrReadOnlyForAuditor
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Notice
+from .serializers import NoticeSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
@@ -12,6 +22,22 @@ import pandas as pd
 from datetime import datetime
 import json
 import os, re
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Notice
+from .serializers import NoticeSerializer
+
+class TransactionDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnlyForAuditor]
+
+class ReceiptDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Receipt.objects.all()
+    serializer_class = ReceiptSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnlyForAuditor]
 
 @api_view(['POST'])
 @permission_classes([AllowAny])  # ✅ 누구나 접근 가능
@@ -507,3 +533,81 @@ def transaction_detail(request, pk):
     elif request.method == 'DELETE':
         transaction.delete()
         return JsonResponse({'message': 'Transaction deleted'}, status=204)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def audit_transactions(request):
+    if not request.user.is_auditor:
+        return Response({'detail': '접근 권한이 없습니다.'}, status=403)
+    
+    transactions = Transaction.objects.all().order_by('-date')
+    serializer = TransactionSerializer(transactions, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def audit_receipts(request):
+    if not request.user.is_auditor:
+        return Response({'detail': '접근 권한이 없습니다.'}, status=403)
+    
+    receipts = Receipt.objects.select_related('transaction').all().order_by('-uploaded_at')
+    serializer = ReceiptSerializer(receipts, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def notice_list_create(request):
+    if request.method == 'GET':
+        notices = Notice.objects.all().order_by('-created_at')
+        serializer = NoticeSerializer(notices, many=True)
+        return Response(serializer.data)
+
+    if request.method == 'POST':
+        serializer = NoticeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(author=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def notice_detail(request, pk):
+    try:
+        notice = Notice.objects.get(pk=pk)
+    except Notice.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = NoticeSerializer(notice)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = NoticeSerializer(notice, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        notice.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def auditor_dashboard_summary(request):
+    user = request.user
+
+    if not hasattr(user, 'profile') or not user.profile.is_auditor:
+        return Response({'detail': '접근 권한이 없습니다.'}, status=403)
+
+    data = {
+        'audited_clubs_count': 12,
+        'flagged_transaction_count': 9,
+        'average_expense_ratio': 62.3,
+        'average_receipt_ratio': 89.4,
+        'audit_completion_rate': 57.1
+    }
+
+    return Response(data)

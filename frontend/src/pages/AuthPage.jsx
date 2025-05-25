@@ -1,51 +1,77 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authFetch } from "../utils/authFetch"; //
 import './AuthPage.css'
 
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true)
-    const [form, setForm] = useState({ username: '', password: '', email: '', confirmPassword: '' })
+    const [form, setForm] = useState({
+        username: '',
+        password: '',
+        email: '',
+        confirmPassword: ''
+    })
     const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
+
+    useEffect(() => {
+        const access = localStorage.getItem('access')
+        if (access) {
+            navigate('/')
+        } else {
+            setLoading(false)
+        }
+    }, [navigate])
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
-        setError(null)
-        const endpoint = isLogin ? '/api/auth/login/' : '/api/auth/register/'
+        e.preventDefault();
+        setError(null);
+
+        const endpoint = isLogin ? '/api/auth/login/' : '/api/auth/register/';
 
         try {
-            const res = await authFetch(endpoint, {
+            const res = await fetch(endpoint, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form)
-            })
+            });
 
-            const text = await res.text()
+            const text = await res.text();
 
-            let data
+            let data;
             try {
-                data = JSON.parse(text)
+                data = JSON.parse(text);
             } catch {
-                throw new Error(`서버 응답 오류 (원시 응답): ${text}`)
+                throw new Error(`서버 응답 오류 (원시 응답): ${text}`);
             }
 
-            if (!res.ok) throw new Error(data.error || '오류 발생')
+            if (!res.ok) {
+                const msg = data?.detail;
+                if (msg === 'No active account found with the given credentials') {
+                    throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
+                }
+                throw new Error(msg || data?.error || '로그인 중 오류가 발생했습니다.');
+            }
 
             if (isLogin) {
-                localStorage.setItem('access', data.access)
-                localStorage.setItem('refresh', data.refresh)
-                navigate('/')
+                localStorage.setItem('access', data.access);
+                localStorage.setItem('refresh', data.refresh);
+                window.location.href = '/';  // 💡이 부분을 변경!
             } else {
-                alert('회원가입 완료! 로그인 해주세요.')
-                setIsLogin(true)
+                alert('회원가입 완료! 로그인 해주세요.');
+                setIsLogin(true);
             }
         } catch (err) {
-            setError(err.message || '알 수 없는 오류 발생')
+            setError(err.message || '알 수 없는 오류 발생');
         }
+    };
+
+    if (loading) {
+        return <div>로딩 중...</div>
     }
 
     return (

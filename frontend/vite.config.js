@@ -15,7 +15,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // ❌ '/auth' 프록시 제거!
     }
   }
 })
