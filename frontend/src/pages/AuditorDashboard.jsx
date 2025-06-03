@@ -11,6 +11,10 @@ export default function AuditorDashboard() {
     const [avgReceiptRatio, setAvgReceiptRatio] = useState(0);
     const [auditCompletionRate, setAuditCompletionRate] = useState(0);
 
+    const EXPENSE_COLORS = ['#00C49F', '#FF8042'];
+    const RECEIPT_COLORS = ['#8884d8', '#ffc658'];
+    const COMPLETION_COLORS = ['#82ca9d', '#ff9999'];
+
     useEffect(() => {
         authFetch('/api/auditor/dashboard-summary/')
             .then(res => res.json())
@@ -26,7 +30,7 @@ export default function AuditorDashboard() {
 
     return (
         <div className="dashboard">
-            <h1 className="title">📋 감사원용 DASHBOARD</h1>
+            <h1 className="title">📋 감사 대시보드</h1>
             <div className="card unified-dashboard-card">
                 <div className="summary-cards">
                     <div className="card">
@@ -48,6 +52,47 @@ export default function AuditorDashboard() {
                     <div className="card">
                         <div className="amount">✅ {auditCompletionRate.toFixed(1)}%</div>
                         <div className="label">감사 완료율</div>
+                    </div>
+                </div>
+
+                <div className="chart-section center">
+                    <div className="card chart-box">
+                        <h2>평균 지출 비율</h2>
+                        <PieChart width={260} height={260}>
+                            <Pie data={[
+                                { name: '지출', value: parseFloat(avgExpenseRatio.toFixed(1)) },
+                                { name: '기타', value: parseFloat((100 - avgExpenseRatio).toFixed(1)) }
+                            ]} cx="50%" cy="50%" outerRadius={90} dataKey="value">
+                                {EXPENSE_COLORS.map((color, index) => <Cell key={`exp-${index}`} fill={color} />)}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </div>
+
+                    <div className="card chart-box">
+                        <h2>영수증 등록률 평균</h2>
+                        <PieChart width={260} height={260}>
+                            <Pie data={[
+                                { name: '등록됨', value: parseFloat(avgReceiptRatio.toFixed(1)) },
+                                { name: '미등록', value: parseFloat((100 - avgReceiptRatio).toFixed(1)) }
+                            ]} cx="50%" cy="50%" outerRadius={90} dataKey="value">
+                                {RECEIPT_COLORS.map((color, index) => <Cell key={`rec-${index}`} fill={color} />)}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </div>
+
+                    <div className="card chart-box">
+                        <h2>감사 완료율</h2>
+                        <PieChart width={260} height={260}>
+                            <Pie data={[
+                                { name: '완료됨', value: parseFloat(auditCompletionRate.toFixed(1)) },
+                                { name: '미완료', value: parseFloat((100 - auditCompletionRate).toFixed(1)) }
+                            ]} cx="50%" cy="50%" outerRadius={90} dataKey="value">
+                                {COMPLETION_COLORS.map((color, index) => <Cell key={`comp-${index}`} fill={color} />)}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
                     </div>
                 </div>
             </div>

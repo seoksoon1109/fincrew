@@ -1,6 +1,4 @@
-// src/App.jsx
-
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Dashboard from './pages/Dashboard'
 import AuditorDashboard from './pages/AuditorDashboard'
@@ -18,70 +16,72 @@ import NoticeListPage from './pages/NoticeListPage'
 import NoticeDetailPage from './pages/NoticeDetailPage'
 import NoticeCreatePage from './pages/NoticeCreatePage'
 import { authFetch } from './utils/authFetch'
+import NoticeEditPage from './pages/NoticeEditPage'
+import AuditReviewPage from './pages/AuditReviewPage'
+import AuditCommentPage from './pages/AuditCommentPage'
+import AuditStatsPage from './pages/AuditStatsPage'
+import AuditClubChartPage from './pages/AuditClubChartPage'
+import MyClubChartPage from './pages/MyClubChartPage'
+import AuditCommentSummaryPage from './pages/AuditCommentSummaryPage'
 
 function App() {
   const [isAuditor, setIsAuditor] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(null)
-
+  const location = useLocation()
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (location.pathname === '/auth') {
-        // 로그인 페이지에선 인증 체크하지 않음
-        setIsAuthenticated(false);
-        setIsAuditor(false);
-        return;
+      const isOnAuthPage = location.pathname === '/auth'
+      if (isOnAuthPage) {
+        setIsAuthenticated(false)
+        setIsAuditor(false)
+        return
       }
 
       try {
-        const res = await authFetch('/api/auth/me/');
-        if (!res.ok) throw new Error('인증 실패');
-        const data = await res.json();
-        setIsAuditor(data.is_auditor);
-        setIsAuthenticated(true);
+        const res = await authFetch('/api/auth/me/')
+        if (!res.ok) throw new Error('인증 실패')
+        const data = await res.json()
+        setIsAuditor(data.is_auditor)
+        setIsAuthenticated(true)
       } catch (err) {
-        console.error('유저 정보 불러오기 실패', err);
-        setIsAuditor(false);
-        setIsAuthenticated(false);
+        console.error('유저 정보 불러오기 실패', err)
+        setIsAuditor(false)
+        setIsAuthenticated(false)
       }
-    };
-    fetchUser();
-  }, [location.pathname]);
+    }
 
+    if (isAuthenticated === null) {
+      fetchUser()
+    }
+  }, [location.pathname, isAuthenticated])
+
+  // 인증 상태 판단 전에는 UI를 렌더링하지 않음
   if (isAuthenticated === null) {
     return <div>로딩 중...</div>
   }
 
   return (
     <Routes>
-      {/* 로그인 페이지: 로그인 상태면 홈으로 리다이렉트 */}
       <Route
         path="/auth"
         element={
-          <AuthRedirect isAuthenticated={isAuthenticated}>
+          isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
             <AuthPage />
-          </AuthRedirect>
+          )
         }
       />
-
-      {/* 보호된 라우트: 인증 안되면 로그인 페이지로 리다이렉트 */}
       <Route
         path="/"
         element={
-          isAuthenticated ? (
-            <ProtectedRoute>
-              <SidebarLayout />
-            </ProtectedRoute>
-          ) : (
-            <Navigate to="/auth" replace />
-          )
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <SidebarLayout />
+          </ProtectedRoute>
         }
       >
-        {/* index 페이지: 감사원/일반 사용자 분기 */}
-        <Route
-          index
-          element={isAuditor ? <AuditorDashboard /> : <Dashboard />}
-        />
+        <Route index element={isAuditor ? <AuditorDashboard /> : <Dashboard />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="calendar/:date" element={<CalendarDatePage />} />
         <Route path="income" element={<IncomePage />} />
@@ -90,7 +90,14 @@ function App() {
         <Route path="members" element={<MemberPage />} />
         <Route path="notices" element={<NoticeListPage />} />
         <Route path="notices/:id" element={<NoticeDetailPage />} />
-        <Route path="/notices/new" element={<NoticeCreatePage />} />
+        <Route path="notices/new" element={<NoticeCreatePage />} />
+        <Route path="notices/:id/edit" element={<NoticeEditPage />} />
+        <Route path="audit/transactions/review" element={<AuditReviewPage />} />
+        <Route path="audit/comments/:id" element={<AuditCommentPage />} />
+        <Route path="audit/stats" element={<AuditStatsPage />} />
+        <Route path="audit/stats/:clubName" element={<AuditClubChartPage />} />
+        <Route path="my-club-chart" element={<MyClubChartPage />} />
+        <Route path="audit/comments-summary" element={<AuditCommentSummaryPage />} />
       </Route>
     </Routes>
   )

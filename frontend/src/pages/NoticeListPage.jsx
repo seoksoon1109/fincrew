@@ -28,6 +28,18 @@ export default function NoticeListPage() {
             .then(res => res.json())
             .then(data => setIsAuditor(data.is_auditor))
             .catch(err => console.error("❌ 사용자 정보 불러오기 실패:", err));
+
+        const markNoticeAsSeen = async () => {
+            try {
+                await authFetch('/api/notice/mark-seen/', {
+                    method: 'POST',
+                });
+            } catch (err) {
+                console.error("❌ 공지 확인 시각 기록 실패:", err);
+            }
+        };
+
+        markNoticeAsSeen();
     }, []);
 
     const handleDelete = async (id) => {

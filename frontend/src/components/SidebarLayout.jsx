@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import AuditorSidebar from './AuditorSidebar'
 import { authFetch } from '../utils/authFetch'
@@ -7,6 +7,7 @@ import "../pages/Modal.css"
 export default function SidebarLayout() {
   const [user, setUser] = useState(null)
   const [hasNewNotice, setHasNewNotice] = useState(false)
+  const location = useLocation()  // ✅ 추가
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,26 +30,26 @@ export default function SidebarLayout() {
   }, [])
 
   useEffect(() => {
-    const fetchNotices = async () => {
+    const checkNewNotices = async () => {
       try {
-        const res = await fetch('/api/notices/', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access')}`
-          }
-        })
+        const res = await authFetch('/api/notice/check-new/')
         if (res.ok) {
           const data = await res.json()
-          const now = new Date()
-          const threeDaysAgo = new Date(now.setDate(now.getDate() - 3))
-          const hasRecent = data.some(n => new Date(n.created_at) > threeDaysAgo)
-          setHasNewNotice(hasRecent)
+          setHasNewNotice(data.has_new)
         }
       } catch (error) {
-        console.error('공지사항 불러오기 실패', error)
+        console.error('새 공지 확인 실패', error)
       }
     }
-    fetchNotices()
+    checkNewNotices()
   }, [])
+
+  // ✅ /notices로 이동 시 뱃지 제거
+  useEffect(() => {
+    if (location.pathname === '/notices') {
+      setHasNewNotice(false)
+    }
+  }, [location.pathname])
 
   const logout = () => {
     localStorage.removeItem('access')
@@ -59,20 +60,32 @@ export default function SidebarLayout() {
   const linkStyle = {
     color: 'black',
     textDecoration: 'none',
-    transition: 'color 0.2s ease'
+    transition: 'color 0.2s ease',
+    padding: '0.3rem 1rem',
+    display: 'block',
+    borderRadius: '6px',
+    fontSize: '22px',
+    lineHeight: '2.6rem'
   }
 
   const hoverStyle = {
     color: '#007bff'
   }
 
+  const sectionTitleStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '2rem 0 1rem',
+    fontSize: '16px',
+    color: '#888'
+  }
+
   if (!user) return <div>로딩 중...</div>
 
   if (user.is_auditor) {
-    // 감사원 레이아웃 (✔️ 대시보드 카드 제거, Outlet만 유지)
     return (
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <AuditorSidebar />
+        <AuditorSidebar user={user} logout={logout} />
         <main style={{ flex: 1, padding: '2rem' }}>
           <Outlet />
         </main>
@@ -80,24 +93,26 @@ export default function SidebarLayout() {
     )
   }
 
-  // 일반 사용자 레이아웃
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <nav style={{ width: '250px', background: '#f4f4f4', padding: '1rem' }}>
+      <nav style={{ width: '250px', background: '#f4f4f4', padding: '1.5rem 1rem' }}>
         <div style={{
-          width: '100%', height: '140px', overflow: 'hidden',
+          width: '100%', height: '120px', overflow: 'hidden',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          marginBottom: '2rem', borderRadius: '8px', borderBottom: '3px solid #ccc'
+          marginBottom: '2rem', borderRadius: '8px', borderBottom: '2px solid #ccc'
         }}>
           <img src="/logo.png" alt="FinCrew 로고"
-            style={{ width: '120%', height: 'auto', objectFit: 'cover' }} />
+            style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
         </div>
 
         <div style={{
-          padding: '0.5rem 1rem', backgroundColor: '#e9ecef',
-          borderRadius: '6px', marginBottom: '1.5rem', fontSize: '14px'
+          padding: '0.75rem 1rem',
+          backgroundColor: '#e9ecef',
+          borderRadius: '6px',
+          marginBottom: '2rem',
+          fontSize: '14px'
         }}>
-          👤 <strong>{user.username}</strong>
+          👤 <strong>{user.club_name}</strong>
           <button
             onClick={logout}
             style={{
@@ -113,14 +128,11 @@ export default function SidebarLayout() {
           </button>
         </div>
 
-        <ul style={{ listStyle: 'none', padding: 0, fontSize: '25px', lineHeight: '3rem' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           <li>
-            <Link
-              to="/notices"
-              style={linkStyle}
+            <Link to="/notices" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
-              onMouseOut={e => (e.target.style.color = linkStyle.color)}
-            >
+              onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               📢 공지사항
               {hasNewNotice && (
                 <span style={{
@@ -138,65 +150,70 @@ export default function SidebarLayout() {
             </Link>
           </li>
           <li>
-            <Link
-              to="/"
-              style={linkStyle}
+            <Link to="/" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
-              onMouseOut={e => (e.target.style.color = linkStyle.color)}
-            >
+              onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               🏠 Dashboard
             </Link>
           </li>
         </ul>
 
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          margin: '2rem 0 1rem', fontSize: '16px', color: '#888'
-        }}>
+        <div style={sectionTitleStyle}>
           <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }} />
           <span style={{ padding: '0 10px', whiteSpace: 'nowrap' }}>장부 관리</span>
           <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }} />
         </div>
 
-        <ul style={{ listStyle: 'none', padding: 0, fontSize: '22px', lineHeight: '2.5rem' }}>
-          <li style={{ paddingLeft: '1rem' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <li>
             <Link to="/calendar" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
               onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               📅 거래 달력
             </Link>
           </li>
-          <li style={{ paddingLeft: '1rem' }}>
+          <li>
             <Link to="/income" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
               onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               ➕ 수입 내역
             </Link>
           </li>
-          <li style={{ paddingLeft: '1rem' }}>
+          <li>
             <Link to="/expense" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
               onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               ➖ 지출 내역
             </Link>
           </li>
+          <li>
+            <Link to="/audit/comments-summary" style={linkStyle}
+              onMouseOver={e => (e.target.style.color = hoverStyle.color)}
+              onMouseOut={e => (e.target.style.color = linkStyle.color)}>
+              💬 코멘트 모아보기
+            </Link>
+          </li>
         </ul>
 
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          margin: '2rem 0 1rem', fontSize: '16px', color: '#888'
-        }}>
+        <div style={sectionTitleStyle}>
           <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }} />
-          <span style={{ padding: '0 10px', whiteSpace: 'nowrap' }}>명부 관리</span>
+          <span style={{ padding: '0 10px', whiteSpace: 'nowrap' }}>동아리 관리</span>
           <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }} />
         </div>
 
-        <ul style={{ listStyle: 'none', padding: 0, fontSize: '22px', lineHeight: '2.5rem' }}>
-          <li style={{ paddingLeft: '1rem' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <li>
             <Link to="/members" style={linkStyle}
               onMouseOver={e => (e.target.style.color = hoverStyle.color)}
               onMouseOut={e => (e.target.style.color = linkStyle.color)}>
               📋 동아리원 조회
+            </Link>
+          </li>
+          <li>
+            <Link to="/my-club-chart" style={linkStyle}
+              onMouseOver={e => (e.target.style.color = hoverStyle.color)}
+              onMouseOut={e => (e.target.style.color = linkStyle.color)}>
+              📊 동아리 통계
             </Link>
           </li>
         </ul>

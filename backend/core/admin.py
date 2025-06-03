@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Transaction, Receipt, Member, Profile
+from .models import Transaction, Receipt, Member, Profile, AuditComment
 
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'title', 'amount', 'date', 'has_receipt', 'note')
-    list_filter = ('type', 'has_receipt', 'date')
+    list_display = ('id', 'type', 'title', 'amount', 'date', 'has_receipt', 'review_status', 'note')
+    list_filter = ('type', 'has_receipt', 'review_status', 'date')
     search_fields = ('title', 'note')
     ordering = ('-date',)
 
@@ -31,6 +31,14 @@ class MemberAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'is_auditor')
+    list_display = ('user', 'is_auditor', 'club_name')
     list_filter = ('is_auditor',)
     search_fields = ('user__username', 'user__email')
+
+
+@admin.register(AuditComment)
+class AuditCommentAdmin(admin.ModelAdmin):
+    list_display = ('transaction', 'user', 'content', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('content', 'author__username')
+    ordering = ('-created_at',)

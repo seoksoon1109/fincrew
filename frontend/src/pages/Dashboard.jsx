@@ -137,7 +137,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard">
-      <h1 className="title">🏠 DASHBOARD</h1>
+      <h1 className="title">🏠 대시보드</h1>
 
       <div className="card unified-dashboard-card">
         <div className="summary-cards">

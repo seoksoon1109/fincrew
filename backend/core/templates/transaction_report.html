@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            margin: 10px;
+            color: #000;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .report-title {
+            text-align: center;
+            font-size: 30px;
+            /* ⬆️ 더 크게 */
+            font-weight: bold;
+            margin-top: 0px;
+            /* ⬆️ 조금 더 위쪽에 붙이기 */
+            margin-bottom: 20px;
+        }
+
+        .report-meta {
+            text-align: right;
+            font-size: 11px;
+            margin-bottom: 30px;
+        }
+
+        .transaction-block {
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            page-break-inside: avoid;
+        }
+
+        .transaction-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .row-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .info-column {
+            width: 65%;
+        }
+
+        .info-row {
+            margin-bottom: 4px;
+        }
+
+        .info-row strong {
+            display: inline-block;
+            width: 60px;
+        }
+
+        .receipt-column {
+            width: 30%;
+        }
+
+        .receipt-column img {
+            width: 50%;
+            border: 1px solid #aaa;
+            display: block;
+            margin-top: 6px;
+        }
+
+
+        .file-list {
+            font-size: 0.9em;
+            padding-left: 1em;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.85em;
+            color: #000;
+            margin-top: 30px;
+            border-top: 1px solid #000;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 제목 -->
+    <h1 class="report-title">거래내역 보고서</h1>
+
+    <!-- 상단 정보 -->
+    <div class="report-meta">
+        <div><strong>작성자:</strong> {{ author }}</div>
+        <div><strong>작성일시:</strong> {{ generated_at }}</div>
+    </div>
+
+    <!-- 거래 반복 -->
+    {% for t in transactions %}
+    <div class="transaction-block">
+        <div class="transaction-title">거래 #{{ forloop.counter }}: {{ t.title }}</div>
+        <div class="row-layout">
+            <!-- 왼쪽 정보 -->
+            <div class="info-column">
+                <div class="info-row"><strong>구분:</strong> {{ t.type_display }}</div>
+                <div class="info-row"><strong>금액:</strong> {{ t.amount }} 원</div>
+                <div class="info-row"><strong>날짜:</strong> {{ t.date }}</div>
+                <div class="info-row"><strong>작성자:</strong> {{ t.username|default:"(정보 없음)" }}</div>
+                <div class="info-row"><strong>감사 상태:</strong> {{ t.review_status_display|default:"(정보 없음)" }}</div>
+                <div class="info-row"><strong>비고:</strong> {{ t.note|default:"(없음)" }}</div>
+                <div class="info-row"><strong>설명:</strong><br>{{ t.description|default:"(설명 없음)" }}</div>
+
+                {% if t.evidences %}
+                <div class="info-row">
+                    <strong>증빙자료:</strong>
+                    <ul class="file-list">
+                        {% for e in t.evidences %}
+                        <li>{{ e }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 오른쪽 영수증 -->
+            <div class="receipt-column">
+                {% if t.receipts %}
+                {% for r in t.receipts %}
+                <img src="{{ r }}" alt="영수증 이미지">
+                {% endfor %}
+                {% else %}
+                <div style="font-size: 11px; color: #888;">(영수증 없음)</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- 푸터 -->
+    <footer>
+        This report was automatically generated via FinCrew on {{ generated_at }}.
+    </footer>
+
+</body>
+
+</html>

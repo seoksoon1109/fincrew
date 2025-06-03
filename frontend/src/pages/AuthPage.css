@@ -1,70 +1,157 @@
+/* 전체 화면 정중앙에 카드 배치 */
 .auth-wrapper {
     display: flex;
     justify-content: center;
+    /* 가로 중앙 정렬 */
     align-items: center;
+    /* 세로 중앙 정렬 */
     height: 100vh;
     background-color: #f8f9fa;
+    padding: 2rem;
+    box-sizing: border-box;
 }
 
-.auth-container {
-    width: 100%;
-    max-width: 360px;
-    padding: 2.5rem;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
-    text-align: center;
-}
-
-.logo-wrapper {
-    height: 120px;
-    overflow: hidden;
+/* 카드: 양쪽 내부 요소 세로 가운데 정렬 */
+.auth-card {
     display: flex;
-    justify-content: center;
+    flex-direction: row;
     align-items: center;
-    margin-bottom: 1.5rem;
+    /* ✅ 내부 요소 세로 중앙 정렬 */
+    gap: 2rem;
+    background: #fff;
+    padding: 2rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    max-width: 1000px;
+    width: 100%;
+    min-height: 500px;
+    box-sizing: border-box;
 }
 
-.auth-logo {
-    width: 260px;
-    height: auto;
+/* 왼쪽 문구 영역 */
+.auth-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* ✅ 문구도 세로 가운데 정렬 */
+    align-items: flex-start;
+    height: 100%;
+    padding: 1rem;
+}
+
+.hashtag {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.main-title {
+    font-size: 2rem;
+    color: #307D70;
+    font-weight: bold;
+    margin: 0.4rem 0;
+}
+
+.sub-title {
+    font-size: 1.4rem;
+    color: #212529;
+    font-weight: bold;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
+}
+
+.desc {
+    font-size: 1rem;
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* 오른쪽 로그인/회원가입 영역 */
+.auth-container {
+    flex: 1;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* ✅ 로그인 영역도 세로 가운데 정렬 */
+    align-items: center;
+    height: 100%;
+    padding-top: 1rem;
+    color: #307D70;
+}
+
+.auth-container h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
 }
 
 .auth-form {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
 .auth-form input,
 .auth-form button {
-    box-sizing: border-box;
     width: 100%;
     max-width: 300px;
+    font-size: 1rem;
+    box-sizing: border-box;
 }
 
 .auth-form input {
-    margin: 12px 0;
-    padding: 0.75rem;
+    margin-bottom: 1.2rem;
+    padding: 0.7rem 1rem;
     font-size: 1rem;
+    height: 40px;
     border: 1px solid #ccc;
     border-radius: 6px;
 }
 
 .auth-form button {
-    padding: 0.75rem;
-    font-size: 1rem;
-    background-color: #007bff;
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    background-color: #307D70;
     color: white;
     border: none;
     border-radius: 6px;
     margin-top: 1rem;
-    cursor: pointer;
+    height: 44px;
+    transition: background-color 0.3s ease;
+}
+
+.auth-logo-wrapper {
+    width: 300px;
+    /* 보이는 영역 */
+    height: 75px;
+    /* 필요 시 조절 */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 2rem;
+    padding-top: 2rem;
+}
+
+.auth-logo.large {
+    height: 250%;
+    /* 세로 기준 확대 */
+    transform: scale(1.5);
+    /* 확대 정도 (조절 가능) */
+    object-fit: cover;
+}
+
+.auth-form button:hover {
+    background-color: #265f57;
 }
 
 .toggle-mode {
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
+    margin-top: 2rem;
+    font-size: 1rem;
     color: #007bff;
     cursor: pointer;
 }
